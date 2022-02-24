@@ -6,7 +6,6 @@ const routes = require('./routes');
 const server = http.createServer((request, response) => { 
 
     const parsedUrl = new URL(`http://localhost:3002${request.url}`);
-    console.log(parsedUrl);
 
     let { pathname } = parsedUrl;
     let id = null;
@@ -21,10 +20,18 @@ const server = http.createServer((request, response) => {
     const route = routes.find((routeObj) => (
         routeObj.endpoint === pathname && routeObj.method === request.method
     ));
+
     if (route) {
         request.query = Object.fromEntries(parsedUrl.searchParams);
         request.params = { id }; 
+
+        response.send = (statusCode, body) => {
+            response.writeHead(statusCode, { 'Content-Type': 'application/json' });
+            response.end(JSON.stringify(body));
+        };
+
         route.handler(request, response);
+        
     } else {
         response.writeHead(404, { 'Content-Type': 'text/html' });
         response.end(`Cannot ${request.method} ${pathname}`);
